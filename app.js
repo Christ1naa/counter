@@ -47,3 +47,46 @@ function saveData() {
   localStorage.setItem("meterData", JSON.stringify(meterData));
   localStorage.setItem("meterHistory", JSON.stringify(meterHistory));
 }
+function renderHistory() {
+  const container = document.getElementById("history-section");
+  container.innerHTML = ""; // очистити попереднє
+
+  if (Object.keys(meterHistory).length === 0) {
+    container.innerHTML = "<p>Історія відсутня.</p>";
+    return;
+  }
+
+  for (const [id, entries] of Object.entries(meterHistory)) {
+    const table = document.createElement("table");
+    table.className = "w-full border border-gray-300 mb-6";
+    const thead = `
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="border px-2 py-1">Дата</th>
+          <th class="border px-2 py-1">День</th>
+          <th class="border px-2 py-1">Ніч</th>
+          <th class="border px-2 py-1">Сума (грн)</th>
+          <th class="border px-2 py-1">Накрутка?</th>
+        </tr>
+      </thead>
+    `;
+    const rows = entries.map(entry => `
+      <tr>
+        <td class="border px-2 py-1">${new Date(entry.timestamp).toLocaleString()}</td>
+        <td class="border px-2 py-1">${entry.day}</td>
+        <td class="border px-2 py-1">${entry.night}</td>
+        <td class="border px-2 py-1">${entry.bill.toFixed(2)}</td>
+        <td class="border px-2 py-1 text-center">${entry.adjusted ? "✅" : "—"}</td>
+      </tr>
+    `).join("");
+
+    table.innerHTML = `
+      <caption class="text-left font-semibold py-2">${id}</caption>
+      ${thead}
+      <tbody>${rows}</tbody>
+    `;
+
+    container.appendChild(table);
+  }
+}
+
