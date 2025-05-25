@@ -9,9 +9,10 @@ document.getElementById("meter-form").addEventListener("submit", function (e) {
   const night = parseInt(document.getElementById("night-value").value);
 
   const result = processMeterReading(id, day, night);
-  document.getElementById("result").innerText = `Сума до оплати: ${result.bill.toFixed(2)} грн`;
+  document.getElementById("result").innerText = `Сума до оплати: ${result.bill.toFixed(2)} грн${result.adjusted ? " (накрутка!)" : ""}`;
 
   saveData();
+  renderHistory();
 });
 
 function processMeterReading(id, newDay, newNight) {
@@ -33,8 +34,10 @@ function processMeterReading(id, newDay, newNight) {
 
   const bill = deltaDay * CONFIG.tariffs.day + deltaNight * CONFIG.tariffs.night;
 
+  // Update current values
   meterData[id] = { day: newDay, night: newNight };
 
+  // Log history
   history.push({
     timestamp: new Date().toISOString(),
     day: newDay,
@@ -42,40 +45,48 @@ function processMeterReading(id, newDay, newNight) {
     bill,
     adjusted
   });
-
   meterHistory[id] = history;
 
   return { bill, adjusted };
-}
-
-function showHistory() {
-  const id = document.getElementById("meter-id").value.trim();
-  const historyContainer = document.getElementById("history");
-  const historyBody = document.getElementById("history-body");
-  historyBody.innerHTML = "";
-
-  if (!id || !meterHistory[id]) {
-    historyContainer.classList.remove("hidden");
-    historyBody.innerHTML = `<tr><td colspan="5" class="text-center p-2">Немає історії для цього лічильника</td></tr>`;
-    return;
-  }
-
-  const entries = meterHistory[id];
-  for (const entry of entries) {
-    const row = `<tr>
-      <td class="border px-2 py-1">${new Date(entry.timestamp).toLocaleString()}</td>
-      <td class="border px-2 py-1">${entry.day}</td>
-      <td class="border px-2 py-1">${entry.night}</td>
-      <td class="border px-2 py-1">${entry.bill.toFixed(2)} грн</td>
-      <td class="border px-2 py-1">${entry.adjusted ? "✅" : "❌"}</td>
-    </tr>`;
-    historyBody.innerHTML += row;
-  }
-
-  historyContainer.classList.remove("hidden");
 }
 
 function saveData() {
   localStorage.setItem("meterData", JSON.stringify(meterData));
   localStorage.setItem("meterHistory", JSON.stringify(meterHistory));
 }
+
+function renderHistory() {
+  const container = document.getElementById("history");
+  container.innerHTML = "";
+
+  if (Object.keys(meterHistory).length === 0) {
+    container.innerText = "Історія показників порожня.";
+    return;
+  }
+
+  for (const id in meterHistory) {
+    const entries = meterHistory[id];
+    const meterBlock = document.createElement("div");
+    meterBlock.classList.add("mb-4");
+
+    const title = document.createElement("h3");
+    title.classList.add("font-bold", "text-blue-700");
+    title.innerText = `Лічильник ${id}`;
+    meterBlock.appendChild(title);
+
+    const list = document.createElement("ul");
+    list.classList.add("list-disc", "ml-6");
+
+    entries.forEach(entry => {
+      const li = document.createElement("li");
+      li.innerText = `[${new Date(entry.timestamp).toLocaleString()}] День: ${entry.day}, Ніч: ${entry.night}, Сума: ${entry.bill.toFixed(2)} грн${entry.adjusted ? " (накрутка)" : ""}`;
+      list.appendChild(li);
+    });
+
+    meterBlock.appendChild(list);
+    container.appendChild(meterBlock);
+  }
+}
+
+// Завантажити історію при старті
+renderHistory();
