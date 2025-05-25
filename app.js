@@ -1,5 +1,9 @@
-let meterData = JSON.parse(localStorage.getItem("meterData")) || CONFIG.initialMeters;
+let meterData = JSON.parse(localStorage.getItem("meterData")) || { ...CONFIG.initialMeters };
 let meterHistory = JSON.parse(localStorage.getItem("meterHistory")) || {};
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderHistory(); // ВАЖЛИВО: відображення при старті
+});
 
 document.getElementById("meter-form").addEventListener("submit", function (e) {
   e.preventDefault();
@@ -34,10 +38,10 @@ function processMeterReading(id, newDay, newNight) {
 
   const bill = deltaDay * CONFIG.tariffs.day + deltaNight * CONFIG.tariffs.night;
 
-  // Update current values
+  // Оновити дані
   meterData[id] = { day: newDay, night: newNight };
 
-  // Log history
+  // Додати до історії
   history.push({
     timestamp: new Date().toISOString(),
     day: newDay,
@@ -60,33 +64,26 @@ function renderHistory() {
   container.innerHTML = "";
 
   if (Object.keys(meterHistory).length === 0) {
-    container.innerText = "Історія показників порожня.";
+    container.innerText = "Історія порожня.";
     return;
   }
 
   for (const id in meterHistory) {
-    const entries = meterHistory[id];
-    const meterBlock = document.createElement("div");
-    meterBlock.classList.add("mb-4");
-
     const title = document.createElement("h3");
-    title.classList.add("font-bold", "text-blue-700");
     title.innerText = `Лічильник ${id}`;
-    meterBlock.appendChild(title);
+    title.classList.add("font-bold", "text-blue-700", "mt-4");
+
+    container.appendChild(title);
 
     const list = document.createElement("ul");
-    list.classList.add("list-disc", "ml-6");
+    list.classList.add("list-disc", "ml-6", "mb-4");
 
-    entries.forEach(entry => {
-      const li = document.createElement("li");
-      li.innerText = `[${new Date(entry.timestamp).toLocaleString()}] День: ${entry.day}, Ніч: ${entry.night}, Сума: ${entry.bill.toFixed(2)} грн${entry.adjusted ? " (накрутка)" : ""}`;
-      list.appendChild(li);
+    meterHistory[id].forEach(entry => {
+      const item = document.createElement("li");
+      item.textContent = `[${new Date(entry.timestamp).toLocaleString()}] День: ${entry.day}, Ніч: ${entry.night}, Сума: ${entry.bill.toFixed(2)} грн${entry.adjusted ? " (накрутка)" : ""}`;
+      list.appendChild(item);
     });
 
-    meterBlock.appendChild(list);
-    container.appendChild(meterBlock);
+    container.appendChild(list);
   }
 }
-
-// Завантажити історію при старті
-renderHistory();
