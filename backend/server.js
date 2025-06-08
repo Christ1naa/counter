@@ -1,10 +1,16 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Для роботи з __dirname у ES-модулях
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Підключення до MongoDB через змінну середовища
 mongoose.connect(process.env.MONGODB_URI, {
@@ -73,7 +79,7 @@ app.get('/api/history/:id', async (req, res) => {
   res.json(meter?.readings || []);
 });
 
-// **НОВИЙ маршрут для отримання всієї історії по всіх лічильниках**
+// Маршрут для отримання всієї історії по всіх лічильниках
 app.get('/api/history', async (req, res) => {
   const meters = await Meter.find();
   const result = {};
@@ -81,6 +87,14 @@ app.get('/api/history', async (req, res) => {
     result[meter.id] = meter.readings;
   });
   res.json(result);
+});
+
+// Віддаємо фронтенд — папка docs
+app.use(express.static(path.join(__dirname, 'docs')));
+
+// Для будь-яких інших маршрутів віддаємо index.html (для SPA)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'docs', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
