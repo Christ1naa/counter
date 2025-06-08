@@ -1,5 +1,7 @@
+const BACKEND_URL = "https://counter-9c2t.onrender.com";
+
 document.addEventListener("DOMContentLoaded", () => {
-  renderHistory(); // можна поки що пусто, бо без ID
+  renderAllHistories();
 });
 
 document.getElementById("meter-form").addEventListener("submit", function (e) {
@@ -9,64 +11,63 @@ document.getElementById("meter-form").addEventListener("submit", function (e) {
   const day = parseInt(document.getElementById("day-value").value);
   const night = parseInt(document.getElementById("night-value").value);
 
-  if (!id) {
-    alert("Будь ласка, введіть ID лічильника");
+  if (!id || isNaN(day) || isNaN(night)) {
+    alert("Будь ласка, введіть усі поля.");
     return;
   }
 
-  // Надіслати дані на backend
-  fetch("https://electricity-backend.onrender.com/api/meter", {
+  fetch(`${BACKEND_URL}/api/meter`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id, day, night })
   })
     .then(res => res.json())
     .then(result => {
-      document.getElementById("result").innerText =
-        `Сума до оплати: ${result.bill.toFixed(2)} грн${result.adjusted ? " (накрутка!)" : ""}`;
-
-      // Після успішного запису оновити історію
-      fetchHistory(id);
+      const msg = `Сума до оплати: ${result.bill.toFixed(2)} грн${result.adjusted ? " (накрутка!)" : ""}`;
+      document.getElementById("result").innerText = msg;
+      renderAllHistories();
     })
     .catch(err => {
       console.error(err);
-      alert("Помилка при збереженні даних");
+      alert("Помилка при обробці запиту.");
     });
 });
 
-// Функція для завантаження і відображення історії по лічильнику
-function fetchHistory(id) {
-  fetch(`https://electricity-backend.onrender.com/api/history/${id}`)
+function renderAllHistories() {
+  const container = document.getElementById("history");
+  container.innerHTML = "Завантаження...";
+
+  fetch(`${BACKEND_URL}/api/history`)
     .then(res => res.json())
     .then(data => {
-      const container = document.getElementById("history");
-      container.innerHTML = "";
-
-      if (!data || data.length === 0) {
+      if (!data || Object.keys(data).length === 0) {
         container.innerText = "Історія порожня.";
         return;
       }
 
-      const title = document.createElement("h3");
-      title.innerText = `Історія лічильника ${id}`;
-      title.classList.add("font-bold", "text-blue-700", "mt-4");
-      container.appendChild(title);
+      container.innerHTML = "";
 
-      const list = document.createElement("ul");
-      list.classList.add("list-disc", "ml-6", "mb-4");
+      for (const id in data) {
+        const title = document.createElement("h3");
+        title.innerText = `Лічильник ${id}`;
+        title.classList.add("font-bold", "text-blue-700", "mt-4");
+        container.appendChild(title);
 
-      data.forEach(entry => {
-        const item = document.createElement("li");
-        item.textContent = `[${new Date(entry.timestamp).toLocaleString()}] День: ${entry.day}, Ніч: ${entry.night}, Сума: ${entry.bill.toFixed(2)} грн${entry.adjusted ? " (накрутка)" : ""}`;
-        list.appendChild(item);
-      });
+        const list = document.createElement("ul");
+        list.classList.add("list-disc", "ml-6", "mb-4");
 
-      container.appendChild(list);
+        data[id].forEach(entry => {
+          const item = document.createElement("li");
+          item.textContent = `[${new Date(entry.timestamp).toLocaleString()}] День: ${entry.day}, Ніч: ${entry.night}, Сума: ${entry.bill.toFixed(2)} грн${entry.adjusted ? " (накрутка)" : ""}`;
+          list.appendChild(item);
+        });
+
+        container.appendChild(list);
+      }
     })
     .catch(err => {
       console.error(err);
-      document.getElementById("history").innerText = "Не вдалося завантажити історію.";
+      container.innerText = "Помилка при отриманні історії.";
     });
 }
 
-// Можна викликати fetchHistory(id) на початку, якщо хочеш завантажувати історію одразу після введення ID
