@@ -6,8 +6,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect(process.env.MONGODB_URI);
+// Підключення до MongoDB
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
+// Схема лічильника
 const meterSchema = new mongoose.Schema({
   id: String,
   readings: [
@@ -23,9 +28,11 @@ const meterSchema = new mongoose.Schema({
 
 const Meter = mongoose.model('Meter', meterSchema);
 
+// Тарифи й штрафи
 const TARIFFS = { day: 3.5, night: 2.0 };
 const PENALTY = { day: 100, night: 80 };
 
+// Додавання показників
 app.post('/api/meter', async (req, res) => {
   const { id, day, night } = req.body;
 
@@ -52,10 +59,22 @@ app.post('/api/meter', async (req, res) => {
   res.json({ bill, adjusted });
 });
 
+// Отримати історію по конкретному ID
 app.get('/api/history/:id', async (req, res) => {
   const meter = await Meter.findOne({ id: req.params.id });
   res.json(meter?.readings || []);
 });
 
+// ✅ Додано: Отримати всю історію по всіх лічильниках
+app.get('/api/history', async (req, res) => {
+  const meters = await Meter.find();
+  const result = {};
+  meters.forEach(m => {
+    result[m.id] = m.readings;
+  });
+  res.json(result);
+});
+
+// Запуск сервера
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
