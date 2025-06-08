@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Лічильники День-Ніч</title>
+  <script src="config.js"></script>
+  <script src="app.js" defer></script>
+  <script src="tests.js" defer></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800 p-4">
+  <div class="max-w-3xl mx-auto bg-white p-6 rounded shadow">
+    <h1 class="text-2xl font-bold mb-4">Електролічильник День-Ніч</h1>
+
+    <form id="meter-form" class="space-y-4">
+      <input type="text" id="meter-id" placeholder="ID лічильника" required class="w-full p-2 border rounded"/>
+      <input type="number" id="day-value" placeholder="Денний показник" required class="w-full p-2 border rounded"/>
+      <input type="number" id="night-value" placeholder="Нічний показник" required class="w-full p-2 border rounded"/>
+      <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Розрахувати</button>
+    </form>
+
+    <div id="result" class="mt-6 text-lg font-medium"></div>
+
+    <hr class="my-6"/>
+
+    <h2 class="text-xl font-bold mb-2">Історія показників</h2>
+    <div id="history" class="overflow-auto max-h-96 text-sm border p-2 bg-gray-50 rounded">
+      Завантаження...
+    </div>
+
+    <hr class="my-6"/>
+
+    <button onclick="runTests()" class="bg-green-600 text-white px-4 py-2 rounded">Запустити тести</button>
+    <pre id="test-results" class="mt-4 bg-gray-200 p-2 rounded whitespace-pre-wrap"></pre>
+  </div>
+</body>
+</html>
