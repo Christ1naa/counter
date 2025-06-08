@@ -6,7 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect('your-mongodb-url-here');
+mongoose.connect('mongodb+srv://admin:admin123@cluster0.lkr1tz5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0');
 
 const meterSchema = new mongoose.Schema({
   id: String,
